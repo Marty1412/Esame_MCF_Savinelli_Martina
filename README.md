@@ -1,5 +1,6 @@
 # Esame_MCF_Savinelli_Martina
 Esame Savinelli Martina: Simulazione Sciame di Particelle
+
 """
 Codice per la simulazione dell'andamento di uno sciame di particelle.
 L'utente può scegliere il passo(s) della simulazione, l'angolo rispetto allo Zenit d'ingresso della particella,
