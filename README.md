@@ -9,3 +9,7 @@ La simulazione avrà dunque inizio e calcolerà la probabilità che le particell
 Alla fine della simulazione verrà restituito il numero di particelle arrivate al detector.
 Si consiglia di notare la differenza di particelle presenti nello sciame all'aumentare dell'angolo(La differenza maggiore si noterà per l'angolo 0° e 45°) e dell'energia.
 """
+Nuovo Codice aggiornato, ha lo stesso procedimento descritto sopra
+
+"Simulazione_Ene" è un codice preimpostato che una volta avviato simula l'andamento dello sciame per 1 fotone e un elettrone per diverse energia e angoli. Sarebbe in grado di salvare anche i dati ottenuti, ma questa parte è stata commentata.
+"Simulazione_angolo" è anch'essa una simulazione automatica che simula l'andamento di un elettrone e un fotone per diversi angoli di inclinazione rispetto allo Zenit; come sopra è in grado di salvare i dati in un file .csv ma anche qui questa parte di codice è stata commentata.
