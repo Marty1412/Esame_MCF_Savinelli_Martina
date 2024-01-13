@@ -22,7 +22,7 @@ class Elettrone:
     def __str__(self) -> str:
         return f"Elettrone con energia {self.energia} e altezza {self.altezza}"
 
-    def perdita_ionizzazione(self, s, energia_iniziale):
+    def perdita_ionizzazione(self, s):
         """
 +       Decresce energia e altezza della particella in base ai parametri
 +       dati per la perdita per ionizzazione.
@@ -34,9 +34,10 @@ class Elettrone:
 +        Returns:
 +            None
 +        """
-        if self.energia > energia_iniziale*(s/X0)*np.exp(-s/X0)*(1/700):
-            self.energia -= energia_iniziale*(s/X0)*np.exp(-s/X0)*(1/700)
-            self.altezza -= s
+        En_ionizzazione=9.495*10e-4*X0
+        if self.energia > En_ionizzazione*s/X0:
+            self.energia -= En_ionizzazione*s/X0
+            self.altezza -= s*np.cos(alfa)
 
     def emissione_bremsstrahlung(self, s,  sciame):
         """
@@ -54,7 +55,7 @@ class Elettrone:
             probabilita = random.SystemRandom().random()
             if probabilita < (1 - math.exp(-s/X0)):
                 en_residua=self.energia /2
-                altezza1=self.altezza - s
+                altezza1=self.altezza - s*np.cos(alfa)
                 nuovo_fotone= Fotone(en_residua, altezza1)  
                 sciame.append(nuovo_fotone)
                 nuovo_e=Elettrone(en_residua, altezza1)
@@ -83,7 +84,7 @@ class Positrone:
     def __str__(self) -> str:
         return f"Positrone con energia {self.energia} e altezza {self.altezza}"
 
-    def perdita_ionizzazione(self, s, energia_iniziale):
+    def perdita_ionizzazione(self, s):
         """
 +       Decresce energia e altezza della particella in base ai parametri
 +       dati per la perdita per ionizzazione.
@@ -95,9 +96,10 @@ class Positrone:
 +        Returns:
 +            None
 +        """
-        if self.energia > energia_iniziale*(s/X0)*np.exp(-s/X0)*(1/700):
-            self.energia -= energia_iniziale*(s/X0)*np.exp(-s/X0)*(1/700)
-            self.altezza -= s
+        En_ionizzazione=9.495*10e-4*X0
+        if self.energia > En_ionizzazione*s/X0:
+            self.energia -= En_ionizzazione*s/X0
+            self.altezza -= s*np.cos(alfa)
         
     def emissione_bremsstrahlung(self, s, sciame):
         """
@@ -115,7 +117,7 @@ class Positrone:
             probabilita = random.SystemRandom().random()
             if probabilita < (1 - math.exp(-s/X0)):
                 en_residua=self.energia /2
-                altezza1=self.altezza - s
+                altezza1=self.altezza - s*np.cos(alfa)
                 nuovo_fotone= Fotone(en_residua, altezza1)  
                 sciame.append(nuovo_fotone)
                 nuovo_p=Positrone(en_residua, altezza1)
@@ -156,11 +158,9 @@ class Fotone:
 +        """
         probabilita = random.SystemRandom().random()
         if self.energia > 2 * 0.511 :
-            if probabilita < (1 - math.exp((-7 * s )/ 9)):
+            if probabilita < (1 - math.exp((-7 * s )/ 9*X0)):
                 en_residua=self.energia /2
-                #print("energia residua= ", en_residua)
-                altezza1=self.altezza - s
-                #print("altezza= ", altezza1)
+                altezza1=self.altezza - s*np.cos(alfa)
                 nuovo_e= Elettrone(en_residua, altezza1)
                 nuovo_p = Positrone(en_residua, altezza1)
                 sciame.append(nuovo_e)
@@ -182,17 +182,6 @@ def simulazione_sciame_iniziale(s, altezza_sciame, altezza_detector):
 +    Returns:
 +        int: Il numero di particelle che sono state rilevate.
     """
-    while True:
-        angolo=float(input("Inserire angolo in gradi compreso tra 0 e 45: "))
-        if angolo > 45 or angolo < 0:
-            print("Errore: l'angolo deve essere compreso tra 0 e 45")
-        else:
-            break
-    
-    alfa = angolo * np.pi / 180
-    
-    t = math.ceil((altezza_sciame - altezza_detector)/np.cos(alfa)/s)
-    
     while True:
         tipo_particella = input("Inserisci il tipo di particella iniziale (elettrone o fotone): ").lower()
     
@@ -235,12 +224,16 @@ def simulazione_sciame_iniziale(s, altezza_sciame, altezza_detector):
                 particelle_rilevate.append(particella)
                 particelle_da_rimuovere.append(particella)
             
-            if isinstance(particella, Elettrone):
-                if particella.energia <= energia_iniziale*(s/X0)*np.exp(-s/X0)*(1/X0):
+            if isinstance(particella, Elettrone) or isinstance(particella, Positrone):
+                if particella.energia <= 9.495*10e-4*X0:
                     particelle_rilevate.append(particella)
                     particelle_da_rimuovere.append(particella)
+                    '''
+                elif X0*np.log(energia_iniziale/particella.energia_critica)/np.log(2)<particella.altezza:
+                    particella.perdita_ionizzazione(s)
+                    '''
                 else:
-                    particella.perdita_ionizzazione(s, particella.energia)
+                    particella.perdita_ionizzazione(s)
                     particella.emissione_bremsstrahlung(s, particelle_da_aggiungere)
                     particelle_da_rimuovere.append(particella)
                     
@@ -251,21 +244,12 @@ def simulazione_sciame_iniziale(s, altezza_sciame, altezza_detector):
                 
                 else:
                     particella.produzione_coppie(s, particelle_da_aggiungere)
-                    particelle_da_rimuovere.append(particella)
-                        
-            if isinstance(particella, Positrone):
-                if particella.energia <= energia_iniziale*(s/X0)*np.exp(-s/X0)*(1/X0):
-                    particelle_rilevate.append(particella)
-                    particelle_da_rimuovere.append(particella)
-                else:
-                    particella.perdita_ionizzazione(s, particella.energia)
-                    particella.emissione_bremsstrahlung(s, particelle_da_aggiungere)
-                    particelle_da_rimuovere.append(particella)
-                    
+                    particelle_da_rimuovere.append(particella)               
+        
             sciame = [particella for particella in sciame if particella not in particelle_da_rimuovere]
             sciame.extend(particelle_da_aggiungere)
             #print("Particelle analizzate correttamente, abbiamo aggiunto {} particelle".format(len(particelle_da_aggiungere)))
-
+            #print(len(particelle_da_aggiungere), ", ", len(particelle_da_rimuovere), ", ", len(sciame))
             particelle_da_aggiungere=[]
             particelle_da_rimuovere=[]
         
@@ -287,6 +271,15 @@ while True:
             print("Errore: il passo deve essere compreso tra 0 e 1")
         else:
             break
+while True:
+        angolo=float(input("Inserire angolo in gradi compreso tra 0 e 45: "))
+        if angolo > 45 or angolo < 0:
+            print("Errore: l'angolo deve essere compreso tra 0 e 45")
+        else:
+            break
+    
+alfa = angolo * np.pi / 180
+t = math.ceil((altezza_sciame - altezza_detector)/np.cos(alfa)/s)
 
 risultato_simulazione = simulazione_sciame_iniziale(s, altezza_sciame, altezza_detector)
 
